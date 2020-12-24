@@ -57,14 +57,22 @@ def label_points(points,labels,parameter,ranges):
     for i,range in enumerate(ranges):
         ranged = copy.deepcopy(range)
         if i ==0:
+            idx_1 = (points[:,2]<parameter[3])
+            idx_2 = (points[:,2]<parameter[4]) &(points[:,2]>parameter[3])
+            idx_3 = (points[:,2]>parameter[4])
+            ranged[3] +=  parameter[2]*points[:,2]*idx_3
+            ranged[3] += (parameter[0]*((points[:,2]-parameter[4])**2)+parameter[2]*points[:,2])*idx_2
+            ranged[3] += ((2*parameter[0]*(parameter[3]-parameter[4])+parameter[2])*(points[:,2]-parameter[3])
+                          +parameter[0]*((parameter[3]-parameter[4])**2)+parameter[2]*parameter[3])*idx_1
+
             quad_idx = (points[:,2]<parameter[4]) &(points[:,2]>parameter[3])
-            linear_idx = (points[:,2]<parameter[3])
-            ranged[3] = range[3]+parameter[0]*(
-                    (points[:,2]-parameter[4])**2)*quad_idx + parameter[2]*points[:,2] + parameter[2]*(points[:,2]-parameter[3])*linear_idx
+            # linear_idx = (points[:,2]<parameter[3])
+            # ranged[3] = range[3]+parameter[0]*(
+            #         (points[:,2]-parameter[4])**2)*quad_idx + parameter[2]*points[:,2] + parameter[2]*(points[:,2]-parameter[3])*linear_idx
             ranged[2] = ranged[2] + ranged[3] - (1.5*(((parameter[0]*points[:,2]*2*quad_idx+parameter[2])**2+1)**(1/2)))
         else:
-            ranged[3] = range[3] - parameter[0] * (points[:, 2])
-            ranged[2] = range[2] - parameter[0] * (points[:, 2])
+            ranged[3] = range[3] - parameter[2] * (points[:, 2])
+            ranged[2] = range[2] - parameter[2] * (points[:, 2])
         index_x = (points[:, 0] > (ranged[0])) & (points[:, 0] < ranged[1])
         index_y = (points[:, 1] > (ranged[2])) & (points[:, 1] < ranged[3])
         index_z = (points[:, 2] > (ranged[4])) & (points[:, 2] < ranged[5])
@@ -225,12 +233,12 @@ if __name__ == '__main__':
 
     files_name = np.loadtxt(os.path.join(train_index_root,train_file_root+'.txt'),dtype=str)
 
-    range = [-5.5, 7, -30, 30, 6.5, 70] #去掉范围外的离散点
+    rail_range = [-5.5, 7, -30, 30, 6.5, 70] #去掉范围外的离散点
 
     dist = 0
     speed = 1.8
     #多目标 位置区间　第一行为轨道，之后都是电线杆
-    ranges = [[-5.5, -2.4, -0.2, 3.9, 6, 70],  #轨道
+    rail_ranges = [[-5.5, -2.4, -0.2, 3.9, 6, 70],  #轨道
 
               [  1,   6.5, -2.6,   3.1, 70,   70],  # 电线杆上
               [-2.8,  1,    2.1,    3.3,  70, 70],  # 电线杆１
@@ -243,15 +251,15 @@ if __name__ == '__main__':
     labels = [1,2,2,2,2,2] #label parameter 1 : label value
 
     # [a,_,b,_,_]  直道是一次函数n=1，弯道是二次函数n>1
-    #shape of number is same as number2 and range.shape[1]
-    parameter = [-0.0042,0,-9.7/70,0,26,0] #label parameter 2 : y=a*z^2 + b*z
+    #shape of number is same as number2 and rail_range.shape[1]
+    parameter = [-0.006,0,-9.6/70,15,22,0] #label parameter 2 : y=a*z^2 + b*z
 
     for i, file_name in enumerate(files_name):
         if i>=47+dist:
             print('Labeling NO.%d file: %s...in part %s with %d files... '%(i,file_name,train_file_root,len(files_name)))
             points = pcd2xyzi(os.path.join(root,train_file_root,file_name))
-            points_ranged = pc_range(points,range)
-            points_labels,part_index = label_points(points_ranged,labels,parameter,ranges)
+            points_ranged = pc_range(points,rail_range)
+            points_labels,part_index = label_points(points_ranged,labels,parameter,rail_ranges)
 
             show_all = []
             for part_i in part_index:
@@ -265,7 +273,6 @@ if __name__ == '__main__':
                 aabb = pcd_part.get_axis_aligned_bounding_box()
                 aabb.color = (0, 0, 0)
                 show_all.append(aabb)
-
             new_data = np.concatenate((points_ranged, points_labels[:, np.newaxis]), axis=-1)
 
             colors = pc_colors(points_labels)
@@ -274,13 +281,32 @@ if __name__ == '__main__':
             pcd_new.points = o3d.utility.Vector3dVector(points_ranged[:, 0:3])
             pcd_new.colors = o3d.utility.Vector3dVector(colors.squeeze())
             show_all.append(pcd_new)
+            quad_points = [
+                [-3.5, -4, parameter[3]],
+                [1, -4, parameter[3]],
+                [-3.5, 4, parameter[3]],
+                [1, 4, parameter[3]],
+                [-3.5, -4, parameter[4]],
+                [1, -4, parameter[4]],
+                [-3.5, 4, parameter[4]],
+                [1, 4, parameter[4]],
+            ]
 
+            quad_lines = [[0, 1],[0, 2],[1, 3],[2, 3],[4, 5],[4, 6],
+                        [5, 7],[6, 7],[0, 4],[1, 5],[2, 6],[3, 7],]
+            quad_colors = [[0, 0.5, 0.5] for i in range(len(quad_lines))]
+            line_set = o3d.geometry.LineSet(
+                points=o3d.utility.Vector3dVector(quad_points),
+                lines=o3d.utility.Vector2iVector(quad_lines),
+            )
+            line_set.colors = o3d.utility.Vector3dVector(quad_colors)
+            show_all.append(line_set)
             o3d.visualization.draw_geometries(show_all, window_name=file_name + '--' + str(i),
                                               width=1080, height=1080)
             # save label parameter
             np.save(os.path.join(save_npy_root, file_name[:-4]), new_data)
 
-            ranges_np = np.asarray(ranges)
+            ranges_np = np.asarray(rail_ranges)
             labels_np = np.asarray(labels)
             labels_np = labels_np[:, np.newaxis]
             parameter_np = np.asarray(parameter)

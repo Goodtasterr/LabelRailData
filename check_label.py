@@ -64,6 +64,7 @@ def show_range(points,label,window_name='test'):
                                   line_points_rt,line_points_lt),axis=0)
 
     line_lines = [[j+i*n_sample,j+1+i*n_sample] for i in range(4) for j in range(n_sample-1)]
+
     line_lines = np.asarray(line_lines)
     line_lines_add = np.asarray([[0,n_sample],[n_sample,3*n_sample],
                                  [2*n_sample,3*n_sample],
@@ -73,6 +74,7 @@ def show_range(points,label,window_name='test'):
                                  [3*n_sample-1,4*n_sample-1],
                                  [3*n_sample-1,n_sample-1]
                                  ])
+
     line_lines = np.concatenate((line_lines,line_lines_add),axis=0)
 
     line_color = [[0, 0, 0] for i in range(len(line_lines))]
@@ -88,17 +90,17 @@ def show_range(points,label,window_name='test'):
     pcd.colors = o3d.utility.Vector3dVector(colors.squeeze())
     mesh = o3d.geometry.TriangleMesh.create_coordinate_frame()
     mesh.scale(2, center=mesh.get_center())
-    o3d.visualization.draw_geometries([line_set,mesh,pcd],window_name=window_name,
+    o3d.visualization.draw_geometries([mesh,pcd],window_name=window_name,
                                       width=1080, height=1080)
 def check_label():
-    data_root = '/media/hwq/g/qxdpcdascii/labeled_rail/pc_npy/a2'
+    data_root = '/media/hwq/g/qxdpcdascii/labeled_rail/pc_npy/a3'
 
     files = os.listdir(data_root)
     files.sort()
     print(len(files))
     # 下上 左右 前后  X Y Z Z与Y的关系  Y=f(Z)
     for i, file in enumerate(files):
-        if i >= 11:
+        if i >= 44:
             data = np.load(os.path.join(data_root,file))
             print(os.path.join(data_root,file),data.shape)
             points = data[:,0:3]
