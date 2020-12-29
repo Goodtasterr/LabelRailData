@@ -40,9 +40,9 @@ def rail_fit(parameters):
         y3_1 = xryr[1]-(np.sign(k2))*(np.sqrt((r-(np.sign(k2))*delta_r)**2-(x3_1-xryr[0])**2))
 
         line_set_para = np.zeros([3,3])
-        line_set_para[0] = [0,xryr[1],xryr[0]]
-        line_set_para[1] = [0,k1*x1+b1,x1]
-        line_set_para[2] = [0, k2 * x2 + b2, x2]
+        line_set_para[0] = [-2.4,xryr[1],xryr[0]]
+        line_set_para[1] = [-2.4,k1*x1+b1,x1]
+        line_set_para[2] = [-2.4, k2 * x2 + b2, x2]
 
         return np.asarray([xryr[0],xryr[1],x1,x2,x1_1,x2_1]).astype(np.float32),line_set_para
 
@@ -63,8 +63,9 @@ def label_points_lr(points,labels,parameter,ranges):
             idx2_1 = (points[:,2]<=x2_1) &(points[:,2]>x1_1)
             idx3_1 = (points[:,2]>x2_1)
             ranged[2] = idx1 * (k1*points[:,2]+b1)
-            # yr-0.1 是调试加入0.1
-            ranged[2] += idx2 * (yr-0.1-(np.sign(k2))*(np.sqrt(r**2-((points[:,2]-xr)*idx2)**2)))
+            # fixed_range2 是调试加入
+            fixed_range2 = 0.06
+            ranged[2] += idx2 * (yr-fixed_range2-(np.sign(k2))*(np.sqrt(r**2-((points[:,2]-xr)*idx2)**2)))
             ranged[2] += idx3 * (k2*points[:, 2] + b2)
 
             ranged[3] = idx1_1*(k1*points[:,2]+b1+delta_r*(1+k1**2)**0.5)

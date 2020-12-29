@@ -117,7 +117,7 @@ if __name__ == '__main__':
     # [a,_,b,_,_]  直道是一次函数n=1，弯道是二次函数n>1
     #shape of number is same as number2 and rail_range.shape[1]
     # parameter = [-0.006,0,-9.6/70,15,22,0] #label parameter 2 : y=a*z^2 + b*z
-    parameter_lr = np.asarray([-0.014,-0.5,-0.12,1.8,55,1.6]).astype(np.float32)  #parameter_lr k1 b1 k2 b2 r delta_r
+    parameter_lr = np.asarray([-0.014,-0.5,-0.12,1.8,120,1.6]).astype(np.float32)  #parameter_lr k1 b1 k2 b2 r delta_r
     for i, file_name in enumerate(files_name):
         if i>=47+dist:
             print('Labeling NO.%d file: %s...in part %s with %d files... '%(i,file_name,train_file_root,len(files_name)))
