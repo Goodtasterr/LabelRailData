@@ -87,6 +87,7 @@ def label_points(points,labels,parameter,ranges):
 
 
 if __name__ == '__main__':
+
     root = '../../dataset/qxdpcdascii/'
     train_index_root = os.path.join(root,'train_index')
     train_file_root = 'a3'  # pcd files in a1
@@ -98,28 +99,29 @@ if __name__ == '__main__':
     files_name = np.loadtxt(os.path.join(train_index_root,train_file_root+'.txt').replace('\\', '/'),dtype=str)
 
     rail_range = [-5.5, 7, -30, 30, 6.5, 70] #去掉范围外的离散点
-
-    dist = 0
+    trans_xyz = [[0,1,0],
+                 [1,0,0],
+                 [0,0,-1]]
     speed = 1.8
     #多目标 位置区间　第一行为轨道，之后都是电线杆
-    rail_ranges = [[-5.5, -2.4, 0, 1, 6, 70],  #轨道
+    rail_ranges = [[-5.5, -2.4, 0, 1, 6, 56],  #轨道
 
-              [  1,   6.5, -2.6,   3.1, 70,   70],  # 电线杆上
-              [-2.8,  1,    2.1,    3.3,  70, 70],  # 电线杆１
+              [ 1.2,   6.5, -2.4,   4.9, 6,   58],  # 电线杆上
 
-              [-2.9,  1,    1.7,    3.3,  70, 70],  # 电线杆２
+              [-2.7, 1.2, 2., 5, 22, 31],  # 电线杆１
+              [-2.7, 1.2,0, 5, 38, 58],  # 电线杆左前
+              [-2.6,  6.5,    -3,    3.5,  62, 62],  # 电线杆２
 
-              [-2.3,  1,    2.0,    3.3,  70, 70],  # 电线杆3
-              [-1.8,6.5, -3, 9, 70,70],  # 电线杆左前
+              [-2.8,  1.2,    -6.8,    -3,  42, 42],  # 电线杆3
               ]
     labels = [1,2,2,2,2,2] #label parameter 1 : label value
 
     # [a,_,b,_,_]  直道是一次函数n=1，弯道是二次函数n>1
     #shape of number is same as number2 and rail_range.shape[1]
     # parameter = [-0.006,0,-9.6/70,15,22,0] #label parameter 2 : y=a*z^2 + b*z
-    parameter_lr = np.asarray([-0.014,-0.5,-0.12,1.8,120,1.6]).astype(np.float32)  #parameter_lr k1 b1 k2 b2 r delta_r
+    parameter_lr = np.asarray([0.06,-0.76,-0.101,3.6,170,1.65]).astype(np.float32)  #parameter_lr k1 b1 k2 b2 r delta_r
     for i, file_name in enumerate(files_name):
-        if i>=47+dist:
+        if i>=352:
             print('Labeling NO.%d file: %s...in part %s with %d files... '%(i,file_name,train_file_root,len(files_name)))
             points = pcd2xyzi(os.path.join(root,train_file_root,file_name).replace('\\', '/'))
             points_ranged = pc_range(points,rail_range)
@@ -134,7 +136,7 @@ if __name__ == '__main__':
                 except:
                     pass
                 pcd_part = o3d.geometry.PointCloud()
-                pcd_part.points = o3d.utility.Vector3dVector(part_point[:, 0:3])
+                pcd_part.points = o3d.utility.Vector3dVector(np.dot(part_point[:, 0:3],trans_xyz))
                 aabb = pcd_part.get_axis_aligned_bounding_box()
                 aabb.color = (0, 0, 0)
                 show_all.append(aabb)
@@ -143,21 +145,22 @@ if __name__ == '__main__':
             colors = pc_colors(points_labels)
             print(new_data.shape)
             pcd_new = o3d.geometry.PointCloud()
-            pcd_new.points = o3d.utility.Vector3dVector(points_ranged[:, 0:3])
+            # pcd_new.points = o3d.utility.Vector3dVector(points_ranged[:, 0:3])
+            pcd_new.points = o3d.utility.Vector3dVector(np.dot(points_ranged[:, 0:3],trans_xyz))
             pcd_new.colors = o3d.utility.Vector3dVector(colors.squeeze())
             show_all.append(pcd_new)
 
             line_set_lines = [[0, 1],[1, 2],[0, 2]]
             quad_colors = [[0, 0.5, 0.5] for i in range(len(line_set_lines))]
             line_set = o3d.geometry.LineSet(
-                points=o3d.utility.Vector3dVector(line_set_para),
+                points=o3d.utility.Vector3dVector(np.dot(line_set_para,trans_xyz)),
                 lines=o3d.utility.Vector2iVector(line_set_lines),
             )
             line_set.colors = o3d.utility.Vector3dVector(quad_colors)
             show_all.append(line_set)
 
             mesh = o3d.geometry.TriangleMesh.create_coordinate_frame()
-            mesh.scale(5, center=mesh.get_center())
+            mesh.scale(1, center=mesh.get_center())
             show_all.append(mesh)
             o3d.visualization.draw_geometries(show_all, window_name=file_name + '--' + str(i),
                                               width=1080, height=1080)
@@ -167,7 +170,7 @@ if __name__ == '__main__':
             ranges_np = np.asarray(rail_ranges)
             labels_np = np.asarray(labels)
             labels_np = labels_np[:, np.newaxis]
-            parameter_np = np.asarray(parameter)
+            parameter_np = np.asarray(parameter_lr)
             parameter_np = parameter_np[:, np.newaxis]
 
             parameter_save = np.concatenate((ranges_np, labels_np,parameter_np), axis=-1)

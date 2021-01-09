@@ -9,7 +9,7 @@ import math
 def pc_colors(arr):
     list = np.asarray([
         # [100, 100, 100],
-        [255,0,0],
+        [128,128,128],
         [0,255,0],
         [0,0,255],
         [127, 0, 127],
@@ -89,21 +89,25 @@ def show_range(points,label,window_name='test'):
     pcd.points = o3d.utility.Vector3dVector(points[:, 0:3])
     pcd.colors = o3d.utility.Vector3dVector(colors.squeeze())
     mesh = o3d.geometry.TriangleMesh.create_coordinate_frame()
-    mesh.scale(2, center=mesh.get_center())
+    mesh.scale(1, center=mesh.get_center())
     o3d.visualization.draw_geometries([mesh,pcd],window_name=window_name,
                                       width=1080, height=1080)
 def check_label():
-    data_root = '/media/hwq/g/qxdpcdascii/labeled_rail/pc_npy/a3'
+    data_root = '../../dataset/qxdpcdascii/labeled_rail/pc_npy/a3'
 
     files = os.listdir(data_root)
     files.sort()
     print(len(files))
+    trans_xyz = [[0, 1, 0],
+                 [1, 0, 0],
+                 [0, 0, -1]]
     # 下上 左右 前后  X Y Z Z与Y的关系  Y=f(Z)
     for i, file in enumerate(files):
-        if i >= 44:
-            data = np.load(os.path.join(data_root,file))
-            print(os.path.join(data_root,file),data.shape)
+        if i >= 337:
+            data = np.load(os.path.join(data_root,file).replace('\\', '/'))
+            print(os.path.join(data_root,file).replace('\\', '/'),data.shape)
             points = data[:,0:3]
+            points = np.dot(points[:, 0:3], trans_xyz)
             label = data[:,4].astype(np.int32)
             print('points',label.max())
             show_range(points,label,window_name=str(i))
