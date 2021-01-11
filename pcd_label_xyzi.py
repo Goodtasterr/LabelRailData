@@ -102,15 +102,15 @@ if __name__ == '__main__':
     trans_xyz = [[0,1,0],
                  [1,0,0],
                  [0,0,-1]]
-    speed = 1.8
     #多目标 位置区间　第一行为轨道，之后都是电线杆
-    rail_ranges = [[-5.5, -2.4, 0, 1, 6, 56],  #轨道
+    rail_ranges = [[-5.5, -2.4, 0, 1, 6, 58],  #轨道
 
-              [ 1.2,   6.5, -2.4,   4.9, 6,   58],  # 电线杆上
+              [ 1.2,   6.5, -0.8,  2.8, 6,   41],  # 电线杆上
 
-              [-2.7, 1.2, 2., 5, 22, 31],  # 电线杆１
-              [-2.7, 1.2,0, 5, 38, 58],  # 电线杆左前
-              [-2.6,  6.5,    -3,    3.5,  62, 62],  # 电线杆２
+              [-2.7, 6.5, -2.8,-0.8, 35, 38],  # 电线杆
+
+              [-2.3, 6.5, -2.8, -0.8, 6,   9],  # 电线杆１
+              [-2.8, 6.5,-8, 0, 70, 70],  # 电线杆左前
 
               [-2.8,  1.2,    -6.8,    -3,  42, 42],  # 电线杆3
               ]
@@ -119,9 +119,9 @@ if __name__ == '__main__':
     # [a,_,b,_,_]  直道是一次函数n=1，弯道是二次函数n>1
     #shape of number is same as number2 and rail_range.shape[1]
     # parameter = [-0.006,0,-9.6/70,15,22,0] #label parameter 2 : y=a*z^2 + b*z
-    parameter_lr = np.asarray([0.06,-0.76,-0.101,3.6,170,1.65]).astype(np.float32)  #parameter_lr k1 b1 k2 b2 r delta_r
+    parameter_lr = np.asarray([-0.016,-0.85,0.22,-13.8,160,1.65]).astype(np.float32)  #parameter_lr k1 b1 k2 b2 r delta_r
     for i, file_name in enumerate(files_name):
-        if i>=352:
+        if i>=534:
             print('Labeling NO.%d file: %s...in part %s with %d files... '%(i,file_name,train_file_root,len(files_name)))
             points = pcd2xyzi(os.path.join(root,train_file_root,file_name).replace('\\', '/'))
             points_ranged = pc_range(points,rail_range)

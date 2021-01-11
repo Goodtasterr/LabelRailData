@@ -64,7 +64,7 @@ def label_points_lr(points,labels,parameter,ranges):
             idx3_1 = (points[:,2]>x2_1)
             ranged[2] = idx1 * (k1*points[:,2]+b1)
             # fixed_range2 是调试加入
-            fixed_range2 = 0.03
+            fixed_range2 = -0.00
             ranged[2] += idx2 * (yr-fixed_range2-(np.sign(k2))*(np.sqrt(r**2-((points[:,2]-xr)*idx2)**2)))
             ranged[2] += idx3 * (k2*points[:, 2] + b2)
 
@@ -78,8 +78,10 @@ def label_points_lr(points,labels,parameter,ranges):
             elif xr>40:
                 xr_w=40
             else: xr_w=xr
-            ranged[3] = range[3] + (parameter[0]*(0.025*xr_w)+parameter[2]*(1-0.025*xr_w)) * (points[:, 2])+(parameter[1]+parameter[3])*0.5
-            ranged[2] = range[2] + (parameter[0]*(0.025*xr_w)+parameter[2]*(1-0.025*xr_w))* (points[:, 2])+(parameter[1]+parameter[3])*0.5
+            ranged[3] = range[3] + (parameter[0]*(0.025*xr_w)+parameter[2]*(1-0.025*xr_w)) * (points[:, 2])\
+                        +(parameter[1]*(0.025*xr_w)+parameter[3]*(1-0.025*xr_w))
+            ranged[2] = range[2] + (parameter[0]*(0.025*xr_w)+parameter[2]*(1-0.025*xr_w))* (points[:, 2])\
+                        +(parameter[1]*(0.025*xr_w)+parameter[3]*(1-0.025*xr_w))
         index_x = (points[:, 0] > (ranged[0])) & (points[:, 0] < ranged[1])
         index_y = (points[:, 1] > (ranged[2])) & (points[:, 1] < ranged[3])
         index_z = (points[:, 2] > (ranged[4])) & (points[:, 2] < ranged[5])
