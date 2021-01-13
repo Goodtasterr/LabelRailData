@@ -9,35 +9,36 @@ def rail_fit(parameters):
         theta = np.zeros(10).astype(np.float32)
         theta[1] = math.atan(k1)
         theta[2] = math.atan(k2)
-        theta[3] = theta[2] -theta[1]
-        theta[4] = 0.5*(math.pi-(np.sign(k2).astype(np.float32))*theta[3])
+        theta[3] = (np.sign(k2 - k1).astype(np.float32)) * (theta[2] - theta[1])
+        theta[4] = 0.5 * (math.pi - theta[3])
 
         delta_L = r/math.tan(theta[4])
         x1 = x0y0[0]-delta_L*math.cos(theta[1])
         x2 = x0y0[0]+delta_L*math.cos(theta[2])
+        #
+        # x_range = np.arange(x1-1,x2+1,0.1).astype(np.float32)
+        # y1 = k1*x_range+b1
+        # y2 = k2*x_range+b2
 
-        x_range = np.arange(x1-1,x2+1,0.1).astype(np.float32)
-        y1 = k1*x_range+b1
-        y2 = k2*x_range+b2
+        xryr = [x0y0[0] - r * math.cos(theta[4] - (np.sign(k2 - k1)) * theta[1]) / math.sin(theta[4]),
+                x0y0[1] + (np.sign(k2 - k1)) * r * math.sin(theta[4] - (np.sign(k2 - k1)) * theta[1]) / math.sin(
+                    theta[4])]
 
-
-        xryr = [x0y0[0]-r*math.cos(theta[4]-(np.sign(k2))*theta[1])/math.sin(theta[4]),
-                x0y0[1]+(np.sign(k2))*r*math.sin(theta[4]-(np.sign(k2))*theta[1])/math.sin(theta[4])]
         xryr = np.asarray(xryr).astype(np.float32)
 
         #xy coordinate
-        x3 = np.arange(x1,x2,0.01)
-        y3 = xryr[1]-(np.sign(k2))*(np.sqrt(r**2-(x3-xryr[0])**2))
+        # x3 = np.arange(x1,x2,0.01)
+        # y3 = xryr[1]-(np.sign(k2))*(np.sqrt(r**2-(x3-xryr[0])**2))
 
         ### left rail
-        y1_1 = k1*x_range+b1+delta_r*(1+k1**2)**0.5
-        y2_1 = k2*x_range+b2+delta_r*(1+k2**2)**0.5
+        # y1_1 = k1*x_range+b1+delta_r*(1+k1**2)**0.5
+        # y2_1 = k2*x_range+b2+delta_r*(1+k2**2)**0.5
         x1_1 = x1-delta_r*math.sin(theta[1])
         x2_1 = x2-delta_r*math.sin(theta[2])
 
         #xy coordinate
-        x3_1 = np.arange(x1_1,x2_1,0.01)
-        y3_1 = xryr[1]-(np.sign(k2))*(np.sqrt((r-(np.sign(k2))*delta_r)**2-(x3_1-xryr[0])**2))
+        # x3_1 = np.arange(x1_1,x2_1,0.01)
+        # y3_1 = xryr[1]-(np.sign(k2))*(np.sqrt((r-(np.sign(k2))*delta_r)**2-(x3_1-xryr[0])**2))
 
         line_set_para = np.zeros([3,3])
         line_set_para[0] = [-2.4,xryr[1],xryr[0]]
@@ -52,7 +53,7 @@ def label_points_lr(points,labels,parameter,ranges):
     part_index = []
     k1, b1, k2, b2, r, delta_r = parameter
     (xr, yr, x1, x2, x1_1, x2_1) ,line_set_para= rail_fit(parameter) #xr yr x1 x2 x1_1 x1_2
-    print(parameter,xr, yr, x1, x2, x1_1, x2_1)
+    print('parameter:',xr, yr, x1, x2, x1_1, x2_1)
     for i,range in enumerate(ranges):
         ranged = copy.deepcopy(range)
         if i ==0:
@@ -65,11 +66,11 @@ def label_points_lr(points,labels,parameter,ranges):
             ranged[2] = idx1 * (k1*points[:,2]+b1)
             # fixed_range2 是调试加入
             fixed_range2 = -0.00
-            ranged[2] += idx2 * (yr-fixed_range2-(np.sign(k2))*(np.sqrt(r**2-((points[:,2]-xr)*idx2)**2)))
+            ranged[2] += idx2 * (yr-fixed_range2-(np.sign(k2-k1))*(np.sqrt(r**2-((points[:,2]-xr)*idx2)**2)))
             ranged[2] += idx3 * (k2*points[:, 2] + b2)
 
             ranged[3] = idx1_1*(k1*points[:,2]+b1+delta_r*(1+k1**2)**0.5)
-            ranged[3] += idx2_1*(yr-(np.sign(k2))*(np.sqrt((r-(np.sign(k2))*delta_r)**2-((points[:,2]-xr)*idx2_1)**2)))
+            ranged[3] += idx2_1*(yr-(np.sign(k2-k1))*(np.sqrt((r-(np.sign(k2-k1))*delta_r)**2-((points[:,2]-xr)*idx2_1)**2)))
             ranged[3] += idx3_1 * (k2 * points[:, 2] + b2 + delta_r * (1 + k2 ** 2) ** 0.5)
 
         else:
@@ -95,15 +96,15 @@ def label_points_lr(points,labels,parameter,ranges):
 if __name__ == '__main__':
 
     #k1,b1,k2,b2,r
-    parameters = np.asarray([-0.15,-0.8,-0.005,-8,6,1.65]).astype(np.float32)
+    parameters = np.asarray([-0.09,-0.97,0.006,-3.,140,1.65]).astype(np.float32)
     # parameters = np.asarray([-0.001,-1,0.5,2,1,0.4]).astype(np.float32)
     k1,b1,k2,b2,r,delta_r = parameters
     x0y0 = np.asarray([(b1-b2)/(k2-k1),(b1*k2-k1*b2)/(k2-k1)]).astype(np.float32)
     theta = np.zeros(10).astype(np.float32)
     theta[1] = math.atan(k1)
     theta[2] = math.atan(k2)
-    theta[3] = theta[2] -theta[1]
-    theta[4] = 0.5*(math.pi-(np.sign(k2).astype(np.float32))*theta[3])
+    theta[3] = (np.sign(k2-k1).astype(np.float32))*(theta[2] -theta[1])
+    theta[4] = 0.5*(math.pi-theta[3])
 
     delta_L = r/math.tan(theta[4])
     x1 = x0y0[0]-delta_L*math.cos(theta[1])
@@ -114,15 +115,15 @@ if __name__ == '__main__':
     y2 = k2*x_range+b2
 
 
-    xryr = [x0y0[0]-r*math.cos(theta[4]-(np.sign(k2))*theta[1])/math.sin(theta[4]),
-            x0y0[1]+(np.sign(k2))*r*math.sin(theta[4]-(np.sign(k2))*theta[1])/math.sin(theta[4])]
+    xryr = [x0y0[0]-r*math.cos(theta[4]-(np.sign(k2-k1))*theta[1])/math.sin(theta[4]),
+            x0y0[1]+(np.sign(k2-k1))*r*math.sin(theta[4]-(np.sign(k2-k1))*theta[1])/math.sin(theta[4])]
 
 
     xryr = np.asarray(xryr).astype(np.float32)
-
+    print('xr yr:',xryr)
     #xy coordinate
     x3 = np.arange(x1,x2,0.01)
-    y3 = xryr[1]-(np.sign(k2))*(np.sqrt(r**2-(x3-xryr[0])**2))
+    y3 = xryr[1]-(np.sign(k2-k1))*(np.sqrt(r**2-(x3-xryr[0])**2))
 
     # # r theta coordinate
     # if k2>=0:
@@ -142,7 +143,7 @@ if __name__ == '__main__':
 
     #xy coordinate
     x3_1 = np.arange(x1_1,x2_1,0.01)
-    y3_1 = xryr[1]-(np.sign(k2))*(np.sqrt((r-(np.sign(k2))*delta_r)**2-(x3_1-xryr[0])**2))
+    y3_1 = xryr[1]-(np.sign(k2-k1))*(np.sqrt((r-(np.sign(k2-k1))*delta_r)**2-(x3_1-xryr[0])**2))
 
     # x3_1 = xryr[0]+(r-(np.sign(k2))*delta_r)*np.cos(theta_r)
     # y3_1 = xryr[1]+(r-(np.sign(k2))*delta_r)*np.sin(theta_r)

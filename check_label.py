@@ -93,7 +93,7 @@ def show_range(points,label,window_name='test'):
     o3d.visualization.draw_geometries([mesh,pcd],window_name=window_name,
                                       width=1080, height=1080)
 def check_label():
-    data_root = '../../dataset/qxdpcdascii/labeled_rail/pc_npy/a3'
+    data_root = '../../dataset/qxdpcdascii/labeled_rail/pc_npy/a5'
 
     files = os.listdir(data_root)
     files.sort()
@@ -103,7 +103,7 @@ def check_label():
                  [0, 0, -1]]
     # 下上 左右 前后  X Y Z Z与Y的关系  Y=f(Z)
     for i, file in enumerate(files):
-        if i >= 451:
+        if i >= 86:
             data = np.load(os.path.join(data_root,file).replace('\\', '/'))
             print(os.path.join(data_root,file).replace('\\', '/'),data.shape)
             points = data[:,0:3]
