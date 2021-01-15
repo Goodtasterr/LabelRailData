@@ -103,7 +103,7 @@ def check_label():
                  [0, 0, -1]]
     # 下上 左右 前后  X Y Z Z与Y的关系  Y=f(Z)
     for i, file in enumerate(files):
-        if i >= 86:
+        if i >= 434:
             data = np.load(os.path.join(data_root,file).replace('\\', '/'))
             print(os.path.join(data_root,file).replace('\\', '/'),data.shape)
             points = data[:,0:3]
