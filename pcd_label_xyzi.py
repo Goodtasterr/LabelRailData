@@ -105,28 +105,39 @@ if __name__ == '__main__':
     #多目标 位置区间　第一行为轨道，之后都是电线杆
     rail_ranges = [[-5.5, -2.4, 0, 1, 6, 57],  #轨道
 
-                   [1.2, 6.5, -1.22,4.5, 6, 41],  # 电线杆
-                   [-2.5, 1.2, 2, 4.8, 6, 14.5],  # 电线杆3
-                   [-2.8, 1.2, 2, 4.4, 22, 28],  # 电线杆左前
+                   [-2.8, 6.5,  -1., 5.3, 22, 22],  # 电线杆左前
+                    [-2.7, 1.2,  3, 5.3, 6, 6],  # 电线杆上
 
-                    [-2.7, 6.5, -2.6, 1.8, 44.2, 47],  # 电线杆上
-
-                   [-2.7, 6.5, -.6, 4.8, 61, 70],  # 电线杆１
+                   [-2.6, 1.2, -0.4, 0.6, 6, 6],  # 电线杆１
+                   [-2.7, 1.2, -3.3, -0.2, 6, 6],  # 电线杆3
+                   [1.2, 6.5, -0.9,1.96, 6, 6],  # 电线杆
                 ]
     labels = [1,2,2,2,2,2] #label parameter 1 : label value
 
     # [a,_,b,_,_]  直道是一次函数n=1，弯道是二次函数n>1
     #shape of number is same as number2 and rail_range.shape[1]
     # parameter = [-0.006,0,-9.6/70,15,22,0] #label parameter 2 : y=a*z^2 + b*z
-    parameter_lr = np.asarray([-0.015,-0.86,0.158,-9.4,160,1.65]).astype(np.float32)  #parameter_lr k1 b1 k2 b2 r delta_r
+    parameter_lr = np.asarray([0.12,-1.4,-0.03,3.7,180,1.65]).astype(np.float32)  #parameter_lr k1 b1 k2 b2 r delta_r
+    dist =19
     for i, file_name in enumerate(files_name):
-        if i>=454:
+        t0 = time.time()
+        if i>=694:
             print('Labeling NO.%d file: %s...in part %s with %d files... '%(i,file_name,train_file_root,len(files_name)))
             points = pcd2xyzi(os.path.join(root,train_file_root,file_name).replace('\\', '/'))
             points_ranged = pc_range(points,rail_range)
             # points_labels,part_index = label_points(points_ranged,labels,parameter,rail_ranges)
             points_labels,part_index,line_set_para = label_points_lr(points_ranged,labels,parameter_lr,rail_ranges)
 
+            npdata_root = '../../dataset/qxdpcdascii/labeled_rail/pc_npy/a5'
+            files = os.listdir(npdata_root)
+            files.sort()
+            points_labeled = np.load(os.path.join(npdata_root,files[i]).replace('\\', '/'))
+            labelsP = points_labeled[:,-1]
+            idxN = (points_ranged[:,2]>=dist).astype(np.int)
+            idxP = (points_ranged[:, 2] < dist).astype(np.int)
+            points_labels = (points_labels*idxN +labelsP*idxP).astype(np.int)
+            print('test idxN:',files[i])
+            # exit()
             show_all = []
             for part_i in part_index:
                 part_point = points_ranged[part_i]
@@ -161,6 +172,7 @@ if __name__ == '__main__':
             mesh = o3d.geometry.TriangleMesh.create_coordinate_frame()
             mesh.scale(1, center=mesh.get_center())
             show_all.append(mesh)
+            print('deal one frame time:', time.time() - t0)
             o3d.visualization.draw_geometries(show_all, window_name=file_name + '--' + str(i),
                                               width=1080, height=1080)
             # save label parameter

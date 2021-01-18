@@ -65,7 +65,7 @@ def label_points_lr(points,labels,parameter,ranges):
             idx3_1 = (points[:,2]>x2_1)
             ranged[2] = idx1 * (k1*points[:,2]+b1)
             # fixed_range2 是调试加入
-            fixed_range2 = 0.03
+            fixed_range2 = -0.02
             ranged[2] += idx2 * (yr-fixed_range2-(np.sign(k2-k1))*(np.sqrt(r**2-((points[:,2]-xr)*idx2)**2)))
             ranged[2] += idx3 * (k2*points[:, 2] + b2)
 
